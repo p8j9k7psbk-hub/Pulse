@@ -1,6 +1,6 @@
 {
-  "name": "Pulse",
-  "short_name": "Pulse",
+  "name": "Rune",
+  "short_name": "Rune",
   "description": "私人生活空间",
   "start_url": "/Pulse/",
   "scope": "/Pulse/",
@@ -9,7 +9,7 @@
   "theme_color": "#efeee8",
   "icons": [
     {
-      "src": "/Pulse/apple-touch-icon.png",
+      "src": "/Pulse/pulse-icon-claude.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"

@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1785351002423,
+      "tag": "0000_peaceful_madripoor",
+      "breakpoints": true
+    }
+  ]
 }
