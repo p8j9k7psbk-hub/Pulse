@@ -2,6 +2,7 @@ import {
   buildPushPayload,
   type PushSubscription,
 } from "@block65/webcrypto-web-push";
+import { DurableObject } from "cloudflare:workers";
 
 interface Env {
   DEVICES: DurableObjectNamespace<Device>;
