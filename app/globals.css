@@ -21,6 +21,10 @@ button { color: inherit; }
   --border: rgba(61, 62, 56, .09);
   --accent: #1f211e;
   --accent-contrast: #fff;
+  /* Diary 强调色：默认跟随主题的 --accent，个别主题在下面单独覆盖。 */
+  --diary-tint: var(--accent);
+  --diary-tint-text: color-mix(in srgb, var(--accent) 35%, var(--ink) 65%);
+  --diary-tint-contrast: var(--accent-contrast);
   --tint: #c9d0c1;
   min-height: 100svh;
   background: #d7d4ca;
@@ -28,10 +32,9 @@ button { color: inherit; }
   overflow: hidden;
   transition: background .45s ease;
 }
-.theme-sage { --bg:#71866d; --bg-rgb:113,134,109; --ink:#f7f4eb; --muted:#d7dfd2; --surface:rgba(28,45,30,.36); --surface-strong:rgba(27,39,27,.62); --border:rgba(255,255,255,.15); --accent:#c1e2b8; --accent-contrast:#1e351f; --tint:#9bb398; background:#334a36; }
-.theme-rose { --bg:#d5a0a5; --bg-rgb:213,160,165; --ink:#301d20; --muted:#67484d; --surface:rgba(68,41,44,.52); --surface-strong:rgba(55,32,35,.68); --border:rgba(255,255,255,.15); --accent:#ef7fa2; --accent-contrast:#fff; --tint:#eec0c3; background:#744d55; }
-.theme-ink { --bg:#242622; --bg-rgb:36,38,34; --ink:#f1f0e9; --muted:#a6a99f; --surface:rgba(255,255,255,.07); --surface-strong:rgba(255,255,255,.1); --border:rgba(255,255,255,.09); --accent:#c7d7bd; --accent-contrast:#172016; --tint:#53614f; background:#131512; }
-.theme-claude { --bg:#f1eadf; --bg-rgb:241,234,223; --ink:#2e2a25; --muted:#7d7166; --surface:rgba(255,250,242,.72); --surface-strong:rgba(255,249,239,.9); --border:rgba(82,61,44,.11); --accent:#d97757; --accent-contrast:#fffaf4; --tint:#e5ae91; background:#c48a6e; }
+.theme-sage { --bg:#71866d; --bg-rgb:113,134,109; --ink:#f7f4eb; --muted:#d7dfd2; --surface:rgba(28,45,30,.36); --surface-strong:rgba(27,39,27,.62); --border:rgba(255,255,255,.15); --accent:#c1e2b8; --accent-contrast:#1e351f; --tint:#9bb398; --diary-tint:var(--accent); --diary-tint-text:color-mix(in srgb,var(--accent) 35%,var(--ink) 65%); --diary-tint-contrast:var(--accent-contrast); background:#334a36; }
+.theme-ink { --bg:#242622; --bg-rgb:36,38,34; --ink:#f1f0e9; --muted:#a6a99f; --surface:rgba(255,255,255,.07); --surface-strong:rgba(255,255,255,.1); --border:rgba(255,255,255,.09); --accent:#c7d7bd; --accent-contrast:#172016; --tint:#53614f; --diary-tint:#efeee8; --diary-tint-text:#efeee8; --diary-tint-contrast:#242622; background:#131512; }
+.theme-claude { --bg:#f1eadf; --bg-rgb:241,234,223; --ink:#2e2a25; --muted:#7d7166; --surface:rgba(255,250,242,.72); --surface-strong:rgba(255,249,239,.9); --border:rgba(82,61,44,.11); --accent:#d97757; --accent-contrast:#fffaf4; --tint:#e5ae91; --diary-tint:var(--accent); --diary-tint-text:color-mix(in srgb,var(--accent) 35%,var(--ink) 65%); --diary-tint-contrast:var(--accent-contrast); background:#c48a6e; }
 
 .ambient { position: fixed; border-radius: 999px; filter: blur(60px); opacity: .5; pointer-events: none; }
 .ambient.one { width: 330px; height: 330px; background: #ece5d4; left: calc(50% - 360px); top: -70px; }
@@ -110,6 +113,7 @@ h1 { font-family:var(--serif); font-weight:500; letter-spacing:-.035em; }
 .heartbeat { color:#bc7774; letter-spacing:-2px; font-size:16px; height:31px; display:flex; align-items:center; }
 .focus-line { height:6px; border-radius:8px; background:color-mix(in srgb,var(--ink) 10%,transparent); margin:18px 0 12px; overflow:hidden; }
 .focus-line i { display:block; width:68%; height:100%; background:var(--accent); border-radius:inherit; }
+.cycle-card { grid-column:1 / -1; }
 .cycle-value { display:flex; align-items:center; gap:10px; margin:11px 0 7px; }
 .cycle-value span { width:37px; height:37px; display:grid; place-items:center; border:1px solid var(--ink); border-radius:50%; font-family:var(--serif); }
 .cycle-value strong { font-family:var(--serif); font-size:18px; font-weight:500; }
@@ -172,43 +176,62 @@ h1 { font-family:var(--serif); font-weight:500; letter-spacing:-.035em; }
 .selected-day { background:var(--accent); color:var(--accent-contrast); }
 
 /* Diary borrows the quiet hierarchy and spacing of the native iOS Calendar. */
-.diary-page { --calendar-red:#ff3b30; display:flex; flex-direction:column; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif; }
+/* Diary 的强调色跟随当前主题：--diary-accent 直接取主题的 --accent，
+   压在强调色上的文字取 --accent-contrast，不再写死 iOS 红和白。 */
+/* --diary-accent 用于填充块（配 --accent-contrast 文字）。
+   --diary-accent-text 用于压在页面底色上的文字：有些主题的 accent 和 bg 太接近
+   （暮粉就是），所以往 --ink 方向调和；--ink 永远是该主题的可读前景色，
+   因此深色主题会自动变亮、浅色主题自动变暗，不用为每个主题单独写。 */
+.diary-page { --diary-accent:var(--diary-tint); --diary-accent-text:var(--diary-tint-text); --diary-on-accent:var(--diary-tint-contrast); --diary-line:var(--border); display:flex; flex-direction:column; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif; }
 .diary-page .section-title { order:0; margin:0 0 8px; }
 .diary-page .section-title h1 { font-size:34px; font-weight:750; letter-spacing:-.045em; }
-.diary-page .book-mark { color:var(--calendar-red); }
-.diary-page .segmented-control { order:1; height:32px; margin-bottom:10px; border:0; border-radius:9px; background:rgba(118,118,128,.12); font-family:inherit; }
-.diary-page .segmented-control button { border-radius:7px; font-family:inherit; font-size:11px; }
-.diary-page .segmented-control button.active { background:#fff; color:#111; box-shadow:0 1px 3px rgba(0,0,0,.13); }
-.diary-page > .date-label { order:2; margin:2px 0 6px; text-align:left; color:var(--calendar-red); font-family:inherit; font-size:12px; font-weight:650; }
-.diary-page .calendar-card { order:3; margin:0 -4px 14px; padding:8px 4px 15px; border:0; border-bottom:1px solid rgba(60,60,67,.18); border-radius:0; background:transparent; box-shadow:none; backdrop-filter:none; }
+.diary-page .book-mark { color:var(--diary-accent-text); }
+.diary-page .segmented-control { order:1; height:32px; margin-bottom:10px; border:0; border-radius:9px; background:color-mix(in srgb,var(--ink) 8%,transparent); font-family:inherit; }
+.diary-page .segmented-control button { border-radius:7px; font-family:inherit; font-size:11px; color:var(--muted); }
+.diary-page .segmented-control button.active { background:var(--bg); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.13); }
+.diary-page > .date-label { order:2; margin:2px 0 6px; text-align:left; color:var(--diary-accent-text); font-family:inherit; font-size:12px; font-weight:650; }
+.diary-page .calendar-card { order:3; margin:0 -4px 14px; padding:8px 4px 15px; border:0; border-bottom:1px solid var(--diary-line); border-radius:0; background:transparent; box-shadow:none; backdrop-filter:none; }
 .diary-page .calendar-head { margin-bottom:8px; padding:0 4px; }
 .diary-page .calendar-head strong { font-family:inherit; font-size:20px; font-weight:750; letter-spacing:-.025em; }
-.diary-page .calendar-head button { width:30px; height:30px; border-radius:50%; color:var(--calendar-red); background:rgba(255,59,48,.08); font-size:20px; }
+.diary-page .calendar-head button { width:30px; height:30px; border-radius:50%; color:var(--diary-accent-text); background:color-mix(in srgb,var(--diary-accent) 14%,transparent); font-size:20px; }
 .diary-page .calendar-grid { row-gap:8px; column-gap:4px; }
-.diary-page .calendar-grid .weekday { color:#8e8e93; font-size:9px; font-weight:650; }
+.diary-page .calendar-grid .weekday { color:var(--muted); font-size:9px; font-weight:650; }
 .diary-page .calendar-grid button { width:31px; height:31px; font-size:12px; font-weight:500; }
-.diary-page .calendar-grid button.selected-day { background:var(--calendar-red); color:#fff; }
-.diary-page .calendar-grid button.has-todos::after { bottom:1px; background:var(--calendar-red); }
-.diary-page .calendar-grid button.selected-day::after { background:#fff; }
+.diary-page .calendar-grid button.selected-day { background:var(--diary-accent); color:var(--diary-on-accent); }
+.diary-page .calendar-grid button.has-todos::after { bottom:1px; background:var(--diary-accent); }
+.diary-page .calendar-grid button.selected-day::after { background:var(--diary-on-accent); }
 .diary-page .todo-card { order:4; padding:4px 0 10px; border:0; border-radius:0; background:transparent; box-shadow:none; backdrop-filter:none; }
 .diary-page .todo-card h2 { font-family:inherit; font-size:21px; font-weight:750; letter-spacing:-.025em; }
 .diary-page .todo { padding:12px 2px; }
 .diary-page .todo i { border-radius:50%; }
-.diary-page .todo.done i,.diary-page .quick-add button,.diary-page .save-diary { background:var(--calendar-red); color:#fff; }
+.diary-page .todo.done i,.diary-page .quick-add button,.diary-page .save-diary { background:var(--diary-accent); color:var(--diary-on-accent); }
 .diary-page .quick-add { margin-top:3px; padding:11px 2px 0; }
 .diary-page .week-strip { display:none; }
-.diary-page .journal-entry { order:5; padding:18px 0 8px; border-top:1px solid rgba(60,60,67,.18); }
-.diary-page .entry-meta-row > button,.diary-page .entry-meta span { color:var(--calendar-red); }
+.diary-page .journal-entry { order:5; padding:18px 0 8px; border-top:1px solid var(--diary-line); }
+.diary-page .entry-meta-row > button,.diary-page .entry-meta span { color:var(--diary-accent-text); }
 .diary-page .journal-entry > p:last-child { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif; font-size:13px; line-height:1.65; }
-.diary-page .diary-editor textarea { border-radius:11px; background:rgba(118,118,128,.08); font-family:inherit; }
+.diary-page .diary-editor textarea { border-radius:11px; background:color-mix(in srgb,var(--ink) 6%,transparent); color:var(--ink); font-family:inherit; }
 
 .claude-chat-page { min-height:calc(100svh - 38px); display:flex; flex-direction:column; padding:0 18px 176px; background:linear-gradient(180deg,rgba(248,247,243,.48),transparent 42%); }
-.claude-chat-header { display:grid; grid-template-columns:27px 1fr auto; gap:9px; align-items:center; min-height:52px; border-bottom:1px solid var(--border); }
+.claude-chat-header { display:grid; grid-template-columns:27px 1fr auto auto; gap:9px; align-items:center; min-height:52px; border-bottom:1px solid var(--border); }
 .claude-chat-header > div { display:flex; align-items:center; gap:9px; min-width:0; }
 .claude-chat-header strong { font-family:var(--serif); font-size:16px; font-weight:600; }
 .claude-mini-mark,.assistant-mark { width:27px; height:27px; display:grid; place-items:center; flex:none; border-radius:9px; background:#fff; color:#e8794f; font-size:18px; font-weight:500; box-shadow:0 2px 9px rgba(35,31,27,.08); }
 .claude-mini-mark img { width:100%; height:100%; object-fit:contain; border-radius:9px; }
 .claude-chat-header button { width:31px; height:31px; border:1px solid var(--border); border-radius:50%; background:var(--surface); color:var(--ink); cursor:pointer; font-size:18px; }
+.claude-chat-header .history-button { font-size:14px; }
+.claude-chat-header .history-button.active { background:var(--accent); color:var(--accent-contrast); border-color:transparent; }
+
+/* 历史对话面板 */
+.chat-history { margin:10px 0 2px; border:1px solid var(--border); border-radius:16px; background:var(--surface); overflow:hidden; max-height:46vh; overflow-y:auto; }
+.history-empty { margin:0; padding:16px; color:var(--muted); font-size:11px; line-height:1.6; }
+.history-row { display:grid; grid-template-columns:1fr auto; align-items:center; }
+.history-row + .history-row { border-top:1px solid var(--border); }
+.history-row.current { background:color-mix(in srgb,var(--ink) 5%,transparent); }
+.history-open { display:flex; flex-direction:column; gap:3px; align-items:flex-start; padding:11px 13px; border:0; background:transparent; color:var(--ink); text-align:left; cursor:pointer; min-width:0; width:100%; }
+.history-open strong { font-size:13px; font-weight:550; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.history-open small { color:var(--muted); font-size:10px; }
+.history-delete { flex:none; width:30px; height:30px; margin-right:8px; border:0; border-radius:50%; background:transparent; color:var(--muted); font-size:16px; cursor:pointer; }
 .chat-notice { position:fixed; z-index:30; top:54px; left:50%; transform:translateX(-50%); padding:7px 11px; border:1px solid var(--border); border-radius:10px; background:rgba(255,254,250,.94); color:var(--ink); box-shadow:0 6px 18px rgba(35,31,27,.1); font-size:10px; white-space:nowrap; }
 .chat-model-select { width:auto; max-width:180px; height:27px; padding:0 22px 0 8px; border:0; border-radius:8px; background:rgba(118,118,128,.08); color:var(--muted); font-size:9px; outline:none; }
 .claude-message-stream { flex:1; display:flex; flex-direction:column; gap:18px; padding:24px 0 8px; }
@@ -296,7 +319,6 @@ h1 { font-family:var(--serif); font-weight:500; letter-spacing:-.035em; }
 .settings-section { border:1px solid var(--border); background:var(--surface); border-radius:22px; padding:17px; box-shadow:0 8px 28px rgba(28,29,25,.045),inset 0 1px rgba(255,255,255,.4); backdrop-filter:blur(20px); }
 .settings-heading { margin-bottom:13px; }
 .settings-heading h2 { margin:0; font-family:var(--serif); font-size:21px; font-weight:500; }
-.settings-page .theme-options { grid-template-columns:repeat(5,1fr); }
 .settings-page .theme-option { padding:8px 2px; background:var(--surface-strong); border-color:var(--border); }
 .editable-list { display:flex; flex-direction:column; gap:8px; }
 .editable-row { display:grid; grid-template-columns:minmax(0,1fr) 132px 24px; gap:7px; }
@@ -345,6 +367,51 @@ h1 { font-family:var(--serif); font-weight:500; letter-spacing:-.035em; }
 .theme-option.active { border-color:#6d7767; box-shadow:0 0 0 1px #6d7767; }
 .blur-control { margin-top:17px; display:flex; justify-content:space-between; align-items:center; font-family:var(--serif); font-size:12px; }
 .blur-control input { width:48%; accent-color:#6d7767; }
+/* Settings 分组：用原生 details/summary 折叠，省掉一份状态也自带无障碍语义。 */
+.settings-group { margin-top:14px; border:1px solid var(--border); border-radius:20px; background:var(--surface); overflow:hidden; }
+.settings-group > summary { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:15px 17px; cursor:pointer; list-style:none; }
+.settings-group > summary::-webkit-details-marker { display:none; }
+.settings-group > summary span { display:flex; flex-direction:column; gap:2px; }
+.settings-group > summary b { font-family:var(--serif); font-size:15px; font-weight:600; }
+.settings-group > summary small { color:var(--muted); font-size:10px; }
+.settings-group > summary i { color:var(--muted); font-size:19px; font-style:normal; transition:transform .22s ease; }
+.settings-group[open] > summary i { transform:rotate(90deg); }
+.settings-group[open] > summary { border-bottom:1px solid var(--border); }
+.settings-group-body { padding:2px 15px 15px; }
+.settings-group-body .settings-section { margin-top:15px; border:0; border-radius:0; background:transparent; box-shadow:none; padding:0; }
+.settings-group-body .settings-section + .settings-section { padding-top:15px; border-top:1px solid var(--border); }
+
+/* 头像 + 昵称编辑行 */
+.identity-row { display:flex; align-items:center; gap:12px; margin-top:13px; }
+.identity-avatar { width:52px; height:52px; flex:none; padding:0; border:1px solid var(--border); border-radius:50%; background:var(--surface-strong); color:var(--ink); overflow:hidden; cursor:pointer; display:grid; place-items:center; }
+.identity-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+.identity-avatar span { font-family:var(--serif); font-size:20px; }
+.identity-fields { flex:1; min-width:0; }
+.identity-fields .eyebrow { margin:0 0 3px; font-size:10px; }
+.identity-fields input { width:100%; border:1px solid var(--border); border-radius:11px; padding:9px 11px; background:var(--surface-strong); color:var(--ink); font-size:13px; }
+
+/* 对话气泡里的头像与昵称 */
+.msg-avatar { width:26px; height:26px; flex:none; border-radius:9px; overflow:hidden; display:grid; place-items:center; background:var(--surface-strong); border:1px solid var(--border); color:var(--ink); font-family:var(--serif); font-size:13px; }
+.msg-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+.msg-name { display:block; margin-bottom:3px; color:var(--muted); font-size:9px; }
+/* 用户消息头像在右、气泡在左，整组靠右。
+   row-reverse 下 flex-end 会把内容推到左边，所以这里必须改成 flex-start。 */
+.claude-message.user { flex-direction:row-reverse; justify-content:flex-start; align-items:flex-start; }
+.claude-message.assistant .msg-name { margin-left:1px; }
+.welcome-avatar { border-radius:50%; object-fit:cover; }
+
+.instructions-input { width:100%; min-height:118px; resize:vertical; border:1px solid var(--border); border-radius:12px; padding:10px 11px; background:color-mix(in srgb,var(--ink) 4%,transparent); color:var(--ink); font:12px/1.6 var(--sans); }
+
+.regex-list { display:flex; flex-direction:column; gap:11px; }
+.regex-rule { display:flex; flex-direction:column; gap:7px; padding:11px; border:1px solid var(--border); border-radius:14px; background:color-mix(in srgb,var(--ink) 3%,transparent); }
+.regex-rule.off { opacity:.5; }
+.regex-rule-head { display:flex; align-items:center; gap:9px; }
+.regex-rule-head input { flex:1; min-width:0; border:0; background:transparent; color:var(--ink); font-family:var(--serif); font-size:13px; }
+.regex-field { width:100%; border:1px solid var(--border); border-radius:9px; padding:7px 9px; background:var(--surface-strong); color:var(--ink); font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.regex-meta { display:grid; grid-template-columns:72px 1fr; gap:7px; }
+.regex-meta input { border:1px solid var(--border); border-radius:9px; padding:7px 9px; background:var(--surface-strong); color:var(--ink); font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.regex-meta select { border:1px solid var(--border); border-radius:9px; padding:7px 9px; background:var(--surface-strong); color:var(--ink); font-size:11px; }
+
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
 @media (min-width: 700px) {

@@ -1,10 +1,27 @@
+// 后端推送的负载形如 { title, body, url }。
+// 之前这里忽略了 event.data，导致每条提醒都显示成同一句占位文案。
 self.addEventListener("push", (event) => {
-  event.waitUntil(self.registration.showNotification("Rune", {
-    body: "你有一个新的提醒。",
+  let payload = {};
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch {
+      try {
+        payload = { body: event.data.text() };
+      } catch {
+        payload = {};
+      }
+    }
+  }
+  const title = payload.title || "Rune";
+  const body = payload.body || "你有一个新的提醒。";
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
     icon: "./pulse-icon-claude.png",
     badge: "./pulse-icon-claude.png",
-    tag: "rune-reminder",
-    data: { url: "./" },
+    // 每条提醒用不同的 tag，否则后到的会把前一条顶掉
+    tag: `rune-reminder-${payload.id || Date.now()}`,
+    data: { url: payload.url || "./" },
   }));
 });
 
