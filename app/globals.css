@@ -213,7 +213,7 @@ h1 { font-family:var(--serif); font-weight:500; letter-spacing:-.035em; }
 .diary-page .diary-editor textarea { border-radius:11px; background:color-mix(in srgb,var(--ink) 6%,transparent); color:var(--ink); font-family:inherit; }
 
 .claude-chat-page { min-height:calc(100svh - 38px); display:flex; flex-direction:column; padding:0 18px 176px; background:linear-gradient(180deg,rgba(248,247,243,.48),transparent 42%); }
-.claude-chat-header { display:grid; grid-template-columns:27px 1fr auto auto; gap:9px; align-items:center; min-height:52px; border-bottom:1px solid var(--border); }
+.claude-chat-header { display:grid; grid-template-columns:27px 1fr auto auto auto; gap:7px; align-items:center; min-height:52px; border-bottom:1px solid var(--border); }
 .claude-chat-header > div { display:flex; align-items:center; gap:9px; min-width:0; }
 .claude-chat-header strong { font-family:var(--serif); font-size:16px; font-weight:600; }
 .claude-mini-mark,.assistant-mark { width:27px; height:27px; display:grid; place-items:center; flex:none; border-radius:9px; background:#fff; color:#e8794f; font-size:18px; font-weight:500; box-shadow:0 2px 9px rgba(35,31,27,.08); }
@@ -399,6 +399,72 @@ h1 { font-family:var(--serif); font-weight:500; letter-spacing:-.035em; }
 .claude-message.user { flex-direction:row-reverse; justify-content:flex-start; align-items:flex-start; }
 .claude-message.assistant .msg-name { margin-left:1px; }
 .welcome-avatar { border-radius:50%; object-fit:cover; }
+
+/* 语音：麦克风、朗读、通话 */
+.mic-button { width:31px; height:31px; flex:none; border:1px solid var(--border); border-radius:50%; background:transparent; color:var(--ink); font-size:14px; cursor:pointer; }
+.mic-button.recording { background:#c0392b; border-color:transparent; color:#fff; animation:mic-pulse 1.2s ease-in-out infinite; }
+@keyframes mic-pulse { 0%,100% { opacity:1; } 50% { opacity:.55; } }
+/* 语音消息气泡 */
+.voice-message { display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+.voice-bubble { display:flex; align-items:center; gap:9px; min-width:132px; padding:10px 14px; border:1px solid var(--border); border-radius:16px; background:var(--surface-strong); color:var(--ink); cursor:pointer; }
+.voice-bubble.playing { background:var(--accent); border-color:transparent; color:var(--accent-contrast); }
+.voice-icon { font-size:11px; width:12px; }
+.voice-wave { display:flex; align-items:center; gap:2px; height:18px; }
+.voice-wave i { width:2px; border-radius:2px; background:currentColor; opacity:.45; }
+.voice-bubble.playing .voice-wave i { opacity:.9; animation:voice-wave 1s ease-in-out infinite; }
+.voice-wave i:nth-child(2n) { animation-delay:.15s; }
+.voice-wave i:nth-child(3n) { animation-delay:.3s; }
+@keyframes voice-wave { 0%,100% { transform:scaleY(.55); } 50% { transform:scaleY(1); } }
+.voice-bubble small { font-size:10px; opacity:.7; }
+.voice-to-text { padding:0; border:0; background:transparent; color:var(--muted); font-size:9px; text-decoration:underline; cursor:pointer; }
+.voice-transcript { margin:2px 0 0; font-size:12px; line-height:1.65; color:var(--ink); }
+.call-button { font-size:15px; }
+
+.call-overlay { position:fixed; inset:0; z-index:60; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:32px;
+  background:color-mix(in srgb,var(--bg) 92%,#000); color:var(--ink); animation:page-in .3s ease; }
+/* 环形音波：180 根细线密排成一圈。
+   外层 i 只做定位和旋转（不动），内层 b 的 scaleY 由 JS 每帧计算。
+   不用 CSS 动画是因为"每根固定相位差"只能得到形状不变、绕圈平移的波，
+   看起来像一个不规则图形在原地转。JS 里用四个角度/时间频率都互不成比例的
+   正弦叠加，波形本身会持续变形。不说话时全部归位、循环停止。 */
+.call-orb { --level:0; position:relative; width:210px; height:210px; display:grid; place-items:center; }
+.call-halo {
+  position:absolute; width:124px; height:124px; border-radius:50%;
+  background:radial-gradient(circle, color-mix(in srgb,var(--accent) 16%,transparent) 0%, transparent 68%);
+  transform:scale(calc(1 + var(--level) * .3));
+  opacity:calc(.14 + var(--level) * .3);
+}
+.call-wave { position:absolute; inset:0; }
+.call-wave i {
+  position:absolute; left:calc(50% - .5px); bottom:50%;
+  /* 固定基准长度，起伏完全交给 JS 写的 scaleY，避免两处同时放大 */
+  width:1px; height:8px;
+  transform-origin:50% 100%;
+  transform:rotate(calc(var(--i) * 2deg)) translateY(-58px);
+}
+.call-wave b {
+  display:block; width:100%; height:100%;
+  border-radius:99px; background:var(--accent);
+  opacity:calc(.3 + var(--level) * .45);
+  transform-origin:50% 100%;
+}
+/* 高度由 JS 每帧写 b 的 scaleY，这里只负责静止态和过渡手感 */
+.call-wave b { transition:transform .08s linear; }
+@media (prefers-reduced-motion: reduce) {
+  .call-wave i, .call-wave b { animation:none !important; }
+  .call-halo { transform:none; }
+}
+
+.call-avatar { width:104px; height:104px; border-radius:50%; overflow:hidden; display:grid; place-items:center; background:var(--surface-strong); border:1px solid var(--border); }
+.call-avatar img { width:100%; height:100%; object-fit:cover; }
+.call-avatar span { font-family:var(--serif); font-size:40px; }
+.call-overlay strong { font-family:var(--serif); font-size:22px; font-weight:500; }
+.call-stage { margin:0; color:var(--muted); font-size:12px; }
+.call-stage.listening { color:var(--accent); }
+.call-stage.speaking { color:var(--accent); animation:mic-pulse 1.4s ease-in-out infinite; }
+.call-transcript { margin:0; min-height:40px; max-width:300px; text-align:center; font-size:13px; line-height:1.6; }
+.call-transcript.reply { color:var(--ink); font-size:14px; animation:page-in .3s ease; }
+.call-end { margin-top:10px; padding:12px 34px; border:0; border-radius:99px; background:#c0392b; color:#fff; font-size:14px; cursor:pointer; }
 
 .instructions-input { width:100%; min-height:118px; resize:vertical; border:1px solid var(--border); border-radius:12px; padding:10px 11px; background:color-mix(in srgb,var(--ink) 4%,transparent); color:var(--ink); font:12px/1.6 var(--sans); }
 
